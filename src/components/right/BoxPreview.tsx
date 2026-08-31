@@ -17,6 +17,10 @@ import type { FaceCanvasMap } from '../../hooks/useFaceCanvases';
 
 interface Props {
   faceCanvases: FaceCanvasMap;
+  /** モバイル（スマホ幅）か */
+  isMobile: boolean;
+  /** このプレビューが現在表示中か（非表示なら描画を止める） */
+  active: boolean;
 }
 
 function ExposureRig({ exposure }: { exposure: number }) {
@@ -27,8 +31,10 @@ function ExposureRig({ exposure }: { exposure: number }) {
   return null;
 }
 
-export default function BoxPreview({ faceCanvases }: Props) {
+export default function BoxPreview({ faceCanvases, isMobile, active }: Props) {
   const controlsRef = useRef<CameraControlsImpl | null>(null);
+  const shadowMapSize = isMobile ? 1024 : 2048;
+  const contactRes = isMobile ? 256 : 1024;
   const previewMode = useBoxStore((s) => s.previewMode);
   const bgColor = useBoxStore((s) => s.bgColor);
   const { W, D, H } = useBoxStore((s) => s.dimensions);
@@ -69,8 +75,8 @@ export default function BoxPreview({ faceCanvases }: Props) {
     <div className="preview-wrap" style={{ background: isRoom ? '#d7cdbc' : bgColor }}>
       <Canvas
         shadows
-        frameloop="always"
-        dpr={[1, 2]}
+        frameloop={active ? 'always' : 'never'}
+        dpr={isMobile ? [1, 1.5] : [1, 2]}
         camera={{ position: [3.4, 2.6, 4.2], fov: 40 }}
         gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
       >
@@ -85,7 +91,7 @@ export default function BoxPreview({ faceCanvases }: Props) {
               position={[4, 6, 3]}
               intensity={2.1}
               castShadow
-              shadow-mapSize={[1024, 1024]}
+              shadow-mapSize={[shadowMapSize, shadowMapSize]}
             />
             <directionalLight position={[-3, 2, -4]} intensity={0.5} />
           </>
@@ -118,7 +124,7 @@ export default function BoxPreview({ faceCanvases }: Props) {
           </Environment>
         </Suspense>
 
-        {isRoom && <Room />}
+        {isRoom && <Room mapSize={shadowMapSize} softShadows={!isMobile} contactRes={contactRes} />}
 
         <group position={boxPos}>
           <BoxMesh faceCanvases={faceCanvases} unitScale={unitScale} />
@@ -128,7 +134,7 @@ export default function BoxPreview({ faceCanvases }: Props) {
           <ContactShadows
             position={[0, -boxH / 2, 0]}
             scale={maxDim * unitScale * 2.6}
-            resolution={1024}
+            resolution={contactRes}
             blur={2.6}
             far={maxDim * unitScale}
             opacity={0.4}
@@ -146,7 +152,12 @@ export default function BoxPreview({ faceCanvases }: Props) {
       </Canvas>
 
       <PreviewToolbar />
-      <FaceViewButtons controlsRef={controlsRef} target={boxPos} dist={fitDist} />
+      <FaceViewButtons
+        controlsRef={controlsRef}
+        target={boxPos}
+        dist={fitDist}
+        compact={isMobile}
+      />
       <div className="hint">ドラッグで回転／ホイールでズーム</div>
     </div>
   );

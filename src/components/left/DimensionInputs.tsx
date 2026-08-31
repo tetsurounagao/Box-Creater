@@ -28,6 +28,7 @@ export default function DimensionInputs() {
             </button>
             <input
               type="number"
+              inputMode="numeric"
               value={dimensions[axis]}
               min={10}
               max={600}

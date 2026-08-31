@@ -290,7 +290,17 @@ function TableItems() {
   );
 }
 
-export default function Room() {
+interface RoomProps {
+  mapSize?: number;
+  softShadows?: boolean;
+  contactRes?: number;
+}
+
+export default function Room({
+  mapSize = 2048,
+  softShadows = true,
+  contactRes = 512,
+}: RoomProps) {
   const target = useMemo(() => new THREE.Object3D(), []);
 
   const floorTex = useMemo(
@@ -348,7 +358,7 @@ export default function Room() {
 
   return (
     <group>
-      <SoftShadows size={24} samples={12} focus={0.9} />
+      {softShadows && <SoftShadows size={24} samples={12} focus={0.9} />}
 
       {/* --- ライティング --- */}
       <ambientLight intensity={0.12} />
@@ -360,7 +370,7 @@ export default function Room() {
         color="#fff1dc"
         intensity={2.4}
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[mapSize, mapSize]}
         shadow-bias={-0.0004}
         shadow-normalBias={0.02}
         shadow-camera-near={0.5}
@@ -391,7 +401,7 @@ export default function Room() {
       <ContactShadows
         position={[0, TABLE_TOP_Y + 0.002, TABLE_CENTER_Z]}
         scale={0.85}
-        resolution={512}
+        resolution={contactRes}
         far={0.35}
         blur={2}
         opacity={0.5}

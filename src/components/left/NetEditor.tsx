@@ -3,9 +3,12 @@ import { buildNet } from '../../lib/geometry';
 import type { FaceId } from '../../lib/faces';
 import { FACE_LABEL } from '../../lib/faces';
 import { useBoxStore } from '../../store/boxStore';
+import { useIsCoarsePointer } from '../../hooks/useMediaQuery';
 import type { FaceCanvasMap } from '../../hooks/useFaceCanvases';
 import NetPanel from './NetPanel';
 import DragHandle from './DragHandle';
+
+const POPOVER_W = 180;
 
 interface Props {
   faceCanvases: FaceCanvasMap;
@@ -20,6 +23,7 @@ export default function NetEditor({ faceCanvases, onPickFile, onRecrop }: Props)
   const faces = useBoxStore((s) => s.faces);
   const clearFace = useBoxStore((s) => s.clearFace);
 
+  const coarse = useIsCoarsePointer();
   const net = buildNet(W, D, H);
   const vbW = net.width + PAD * 2;
   const vbH = net.height + PAD * 2;
@@ -100,7 +104,13 @@ export default function NetEditor({ faceCanvases, onPickFile, onRecrop }: Props)
           ))}
           {/* 寸法ハンドル */}
           {net.handles.map((h) => (
-            <DragHandle key={h.axis} handle={h} getPxPerMm={getPxPerMm} scaleMm={scaleMm} />
+            <DragHandle
+              key={h.axis}
+              handle={h}
+              getPxPerMm={getPxPerMm}
+              scaleMm={scaleMm}
+              touch={coarse}
+            />
           ))}
         </svg>
 
@@ -110,7 +120,10 @@ export default function NetEditor({ faceCanvases, onPickFile, onRecrop }: Props)
             <div
               className="popover"
               style={{
-                left: Math.min(popover.x, (wrapRef.current?.clientWidth ?? 0) - 180),
+                left: Math.max(
+                  4,
+                  Math.min(popover.x, (wrapRef.current?.clientWidth ?? 0) - POPOVER_W - 4),
+                ),
                 top: popover.y,
               }}
             >

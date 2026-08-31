@@ -8,16 +8,18 @@ interface Props {
   getPxPerMm: () => number;
   /** ハンドルの見た目サイズ（mm） */
   scaleMm: number;
+  /** タッチ（粗いポインタ）: 掴みやすいよう大きくする */
+  touch?: boolean;
 }
 
-export default function DragHandle({ handle, getPxPerMm, scaleMm }: Props) {
+export default function DragHandle({ handle, getPxPerMm, scaleMm, touch }: Props) {
   const setDimension = useBoxStore((s) => s.setDimension);
   const drag = useRef<{ startClient: number; startValue: number } | null>(null);
 
   const horizontal = handle.dir !== 'x'; // grip の長辺が水平か
-  const gripLong = scaleMm * 2.6;
-  const gripShort = scaleMm * 0.9;
-  const hit = scaleMm * 3;
+  const gripLong = scaleMm * (touch ? 3.4 : 2.6);
+  const gripShort = scaleMm * (touch ? 1.5 : 0.9);
+  const hit = scaleMm * (touch ? 5.5 : 3);
 
   const endDrag = (e: React.PointerEvent) => {
     drag.current = null;

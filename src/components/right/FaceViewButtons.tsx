@@ -8,14 +8,17 @@ interface Props {
   target: [number, number, number];
   /** 箱中心からカメラまでの距離 */
   dist: number;
+  /** モバイル: プルダウンで表示 */
+  compact?: boolean;
 }
 
-export default function FaceViewButtons({ controlsRef, target, dist }: Props) {
+const EXTRA_VIEWS = { overview: [0.7, 0.55, 0.85] } as const;
+
+export default function FaceViewButtons({ controlsRef, target, dist, compact }: Props) {
   const goto = (nx: number, ny: number, nz: number) => {
     const cc = controlsRef.current;
     if (!cc) return;
     const [tx, ty, tz] = target;
-    // 真上/真下はロールが乱れるので僅かに前へずらす
     const pole = Math.abs(ny) > 0.9;
     cc.setLookAt(
       tx + nx * dist,
@@ -28,6 +31,37 @@ export default function FaceViewButtons({ controlsRef, target, dist }: Props) {
     );
   };
 
+  if (compact) {
+    return (
+      <div className="view-select">
+        <label>
+          視点
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              const v = e.target.value;
+              e.target.value = '';
+              if (!v) return;
+              if (v === 'overview') {
+                goto(...EXTRA_VIEWS.overview);
+              } else {
+                goto(...FACE_NORMAL[v as (typeof FACE_IDS)[number]]);
+              }
+            }}
+          >
+            <option value="">選択…</option>
+            {FACE_IDS.map((id) => (
+              <option key={id} value={id}>
+                {FACE_LABEL[id]}
+              </option>
+            ))}
+            <option value="overview">俯瞰</option>
+          </select>
+        </label>
+      </div>
+    );
+  }
+
   return (
     <div className="view-buttons">
       {FACE_IDS.map((id) => {
@@ -38,7 +72,7 @@ export default function FaceViewButtons({ controlsRef, target, dist }: Props) {
           </button>
         );
       })}
-      <button type="button" onClick={() => goto(0.7, 0.55, 0.85)}>
+      <button type="button" onClick={() => goto(...EXTRA_VIEWS.overview)}>
         俯瞰
       </button>
     </div>
